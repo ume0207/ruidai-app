@@ -1,0 +1,121 @@
+/* 小学生向けに読みやすいフォントを既定に */
+html, body {
+  font-family: 'BIZ UDPGothic', 'Hiragino Sans', 'Yu Gothic', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ドラッグ中のドロップエリア強調 */
+#drop-area.is-dragover {
+  background-color: #fff;
+  border-color: #0284c7;
+  transform: scale(1.02);
+  transition: all 0.15s ease;
+}
+
+/* 解説内のSVG図解 */
+.step-diagram svg,
+#result-summary svg {
+  max-width: 100%;
+  height: auto;
+  background: #f8fafc;
+  border-radius: 1rem;
+  padding: 0.5rem;
+  display: block;
+  margin: 0 auto;
+}
+
+/* ステップカード */
+.step-card {
+  background: linear-gradient(135deg, #fff 0%, #fff7ed 100%);
+  border: 2px solid #fde68a;
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  position: relative;
+}
+.step-card .step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: white;
+  font-weight: 800;
+  border-radius: 9999px;
+  margin-right: 0.5rem;
+  font-size: 1rem;
+}
+.step-card .step-title {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #b45309;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+.step-card .step-body {
+  color: #1e293b;
+  line-height: 1.8;
+}
+
+/* 例題の小カード */
+.step-card .example-box {
+  background: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin: 0.75rem 0;
+  font-size: 0.95em;
+}
+
+/* 解説のマークダウン整形 */
+.step-body ol,
+.step-body ul {
+  padding-left: 1.5em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+.step-body li {
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+}
+.step-body strong {
+  color: #db2777;
+  font-weight: 700;
+}
+.step-body code {
+  background: #fef3c7;
+  padding: 0.1em 0.4em;
+  border-radius: 0.4em;
+  font-size: 0.95em;
+  color: #92400e;
+  font-weight: 600;
+}
+.step-body h2,
+.step-body h3 {
+  font-weight: 700;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+  color: #0369a1;
+}
+.step-body p {
+  margin-top: 0.6em;
+  margin-bottom: 0.6em;
+}
+
+/* 答え/解説 ロック中・解放後の切替 */
+#answer-card .answer-locked-view,
+#answer-card .answer-revealed-view,
+#explanation-card .explanation-locked-view,
+#explanation-card .explanation-revealed-view {
+  transition: opacity 0.2s ease;
+}
+
+/* キャラクターの軽いアニメーション */
+.mascot-bounce {
+  animation: mascot-bounce 2s ease-in-out infinite;
+}
+@keyframes mascot-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}

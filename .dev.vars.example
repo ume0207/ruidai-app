@@ -1,0 +1,6 @@
+# ローカル開発用の環境変数。
+# このファイルをコピーして「.dev.vars」というファイル名で保存し、
+# 自分の OpenAI API key を入れてください。
+# .dev.vars は .gitignore でコミットされません。
+
+OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxx

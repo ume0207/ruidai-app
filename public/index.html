@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>受験算数 類題メーカー｜小5・小6中学受験</title>
+<meta name="description" content="算数の問題の写真をのせると、にた問題（類題）と答え・くわしいかいせつをAIが作ってくれるよ。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Yusei+Magic&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body class="min-h-screen bg-gradient-to-br from-sky-50 via-amber-50 to-rose-50 text-slate-800">
+
+  <header class="px-5 pt-8 pb-4 text-center">
+    <div class="flex items-center justify-center gap-3">
+      <img src="/img/mascot-hello.png" alt="" class="w-16 h-16 sm:w-20 sm:h-20 drop-shadow" />
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+          style="font-family: 'Yusei Magic', 'BIZ UDPGothic', sans-serif;">
+        <span class="text-sky-600">受験算数</span><br class="sm:hidden" />
+        <span class="text-amber-600">類題メーカー</span>
+      </h1>
+    </div>
+    <p class="mt-3 text-base sm:text-lg text-slate-700 leading-relaxed">
+      算数の問題のしゃしんをのせると、<br class="sm:hidden" />
+      にた問題と<strong class="text-rose-600">くわしいかいせつ</strong>を作ってくれるよ ✨
+    </p>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-5 pb-24">
+
+    <!-- アップロードエリア -->
+    <section id="upload-section" class="mt-4">
+      <label for="file-input"
+             id="drop-area"
+             class="block cursor-pointer bg-white/70 backdrop-blur border-4 border-dashed border-sky-300 rounded-3xl p-6 sm:p-10 text-center transition-all hover:border-sky-500 hover:bg-white">
+        <img src="/img/mascot-pointing.png" alt="" class="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-2 drop-shadow" />
+        <div class="text-xl sm:text-2xl font-bold text-sky-700">
+          📸 しゃしんをタップしてえらぶ
+        </div>
+        <div class="text-sm sm:text-base text-slate-600 mt-2">
+          またはここに画像をドラッグ&ドロップ
+        </div>
+      </label>
+      <input id="file-input" type="file" accept="image/*" capture="environment" class="hidden" />
+    </section>
+
+    <!-- プレビュー -->
+    <section id="preview-section" class="mt-6 hidden">
+      <div class="bg-white rounded-3xl shadow-lg p-4 sm:p-6">
+        <div class="text-sm font-bold text-slate-500 mb-2">えらんだ問題:</div>
+        <img id="preview-image" alt="えらんだ問題" class="w-full max-h-96 object-contain rounded-2xl bg-slate-50" />
+
+        <!-- 指示テキスト入力 -->
+        <div class="mt-5">
+          <label for="instruction-input" class="block text-sm font-bold text-slate-600 mb-2">
+            ✏️ どの問題をやる? <span class="font-normal text-slate-400">(なくてもOK)</span>
+          </label>
+          <textarea id="instruction-input"
+                    rows="2"
+                    placeholder="例: Aの5番だけやって / 大問2の(3)を教えて / 線分図のところを詳しく"
+                    class="w-full text-base sm:text-lg p-3 sm:p-4 border-2 border-slate-200 rounded-2xl focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100 resize-none bg-slate-50"></textarea>
+          <div class="text-xs text-slate-400 mt-1">
+            ぜんぶ写真にうつっている時は、ここに「どの問題をやるか」だけ書いてね
+          </div>
+        </div>
+
+        <div class="mt-5 flex flex-col sm:flex-row gap-3">
+          <button id="generate-btn"
+                  class="flex-1 bg-gradient-to-r from-amber-400 to-rose-500 hover:from-amber-500 hover:to-rose-600 active:scale-95 text-white text-xl font-extrabold py-4 px-6 rounded-2xl shadow-lg transition-all">
+            ✨ 類題を作る!
+          </button>
+          <button id="reset-btn"
+                  class="bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-base font-bold py-4 px-6 rounded-2xl transition-all">
+            写真をえらびなおす
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ローディング -->
+    <section id="loading-section" class="mt-6 hidden">
+      <div class="bg-white rounded-3xl shadow-lg p-8 text-center">
+        <img src="/img/mascot-thinking.png" alt="" class="w-32 h-32 mx-auto mb-3 animate-bounce" />
+        <div class="text-xl font-bold text-sky-700">AIが考え中...</div>
+        <div class="text-sm text-slate-500 mt-2">10〜30秒くらいかかるよ</div>
+        <div class="mt-4 flex justify-center gap-1">
+          <div class="w-3 h-3 bg-sky-400 rounded-full animate-pulse"></div>
+          <div class="w-3 h-3 bg-amber-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+          <div class="w-3 h-3 bg-rose-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- エラー -->
+    <section id="error-section" class="mt-6 hidden">
+      <div class="bg-rose-50 border-2 border-rose-300 rounded-3xl p-6 text-center">
+        <img src="/img/mascot-error.png" alt="" class="w-24 h-24 mx-auto mb-2" />
+        <div class="text-lg font-bold text-rose-700" id="error-message">エラーが起きました</div>
+        <button id="error-retry-btn"
+                class="mt-4 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-6 rounded-xl">
+          もう一回ためす
+        </button>
+      </div>
+    </section>
+
+    <!-- 結果 -->
+    <section id="result-section" class="mt-6 hidden space-y-5">
+
+      <!-- 単元・難度バッジ -->
+      <div class="flex flex-wrap gap-2 justify-center">
+        <span id="badge-subject" class="bg-sky-100 text-sky-700 px-4 py-1 rounded-full text-sm font-bold"></span>
+        <span id="badge-difficulty" class="bg-amber-100 text-amber-700 px-4 py-1 rounded-full text-sm font-bold"></span>
+      </div>
+
+      <!-- 元の問題 (問題1) -->
+      <div class="bg-white rounded-3xl shadow-lg p-6 border-l-8 border-slate-400">
+        <div class="flex items-center gap-2 text-sm font-bold text-slate-500 mb-3">
+          <span class="bg-slate-100 px-2 py-0.5 rounded">問題①</span>
+          <span>📄 もとの問題 (写真から読みとった)</span>
+        </div>
+        <div id="result-original" class="text-base sm:text-lg text-slate-800 leading-relaxed whitespace-pre-wrap"></div>
+      </div>
+
+      <!-- 類題 (問題2) -->
+      <div class="bg-white rounded-3xl shadow-lg p-6 border-l-8 border-sky-500">
+        <div class="flex items-center gap-2 text-sm font-bold text-sky-600 mb-3">
+          <span class="bg-sky-100 px-2 py-0.5 rounded">問題②</span>
+          <span>📝 にた問題 (類題) — まずは自分でやってみよう!</span>
+        </div>
+        <div id="result-new-problem" class="text-lg sm:text-xl text-slate-800 leading-relaxed whitespace-pre-wrap font-semibold"></div>
+      </div>
+
+      <!-- 答え (隠す) -->
+      <div id="answer-card" class="bg-white rounded-3xl shadow-lg p-6 border-l-8 border-emerald-500 answer-locked">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2 text-sm font-bold text-emerald-600">
+            <span class="bg-emerald-100 px-2 py-0.5 rounded">答え合わせ</span>
+            <span>✅ 答え</span>
+          </div>
+        </div>
+        <!-- ロック中の表示 -->
+        <div class="answer-locked-view text-center py-6">
+          <div class="text-slate-500 mb-4">
+            まずは自分で考えてみよう!<br />
+            できたかな?
+          </div>
+          <button id="show-answer-btn"
+                  class="bg-gradient-to-r from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 active:scale-95 text-white text-lg font-extrabold py-3 px-8 rounded-2xl shadow">
+            👀 答えを見る
+          </button>
+        </div>
+        <!-- 答え本体 -->
+        <div class="answer-revealed-view hidden">
+          <div class="text-center">
+            <img src="/img/mascot-celebrate.png" alt="" class="w-16 h-16 mx-auto mb-2" />
+            <div id="result-answer" class="text-3xl sm:text-4xl font-extrabold text-emerald-700"></div>
+          </div>
+          <button id="hide-answer-btn"
+                  class="mt-4 mx-auto block bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold py-1.5 px-4 rounded-full">
+            答えをかくす
+          </button>
+        </div>
+      </div>
+
+      <!-- 解説 (隠す) -->
+      <div id="explanation-card" class="bg-white rounded-3xl shadow-lg p-6 border-l-8 border-rose-500 explanation-locked">
+        <div class="flex items-center gap-2 text-sm font-bold text-rose-600 mb-3">
+          <span class="bg-rose-100 px-2 py-0.5 rounded">かいせつ</span>
+          <span>💡 くわしいかいせつ</span>
+        </div>
+        <!-- ロック中の表示 -->
+        <div class="explanation-locked-view text-center py-6">
+          <div class="text-slate-500 mb-4">
+            答え合わせができたら、<br />
+            くわしい解き方を見てみよう!
+          </div>
+          <button id="show-explanation-btn"
+                  class="bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 active:scale-95 text-white text-lg font-extrabold py-3 px-8 rounded-2xl shadow">
+            📖 解説を見る
+          </button>
+        </div>
+        <!-- 解説本体 -->
+        <div class="explanation-revealed-view hidden">
+          <div id="result-steps" class="space-y-5"></div>
+          <div id="result-summary" class="mt-6 text-center p-4 bg-rose-50 rounded-2xl"></div>
+          <button id="hide-explanation-btn"
+                  class="mt-5 mx-auto block bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold py-1.5 px-4 rounded-full">
+            解説をかくす
+          </button>
+        </div>
+      </div>
+
+      <!-- もう一回 -->
+      <div class="text-center pt-4">
+        <button id="another-btn"
+                class="bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 active:scale-95 text-white text-lg font-extrabold py-4 px-8 rounded-2xl shadow-lg">
+          🔄 別の問題でもためす
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="text-center text-xs text-slate-400 pb-6 px-4">
+    中学受験算数 類題メーカー · AIが作る問題なので、答えがおかしい時はおうちの人と確認してね
+  </footer>
+
+  <script src="/script.js"></script>
+</body>
+</html>

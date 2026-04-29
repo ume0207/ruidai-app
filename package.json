@@ -1,0 +1,14 @@
+{
+  "name": "ruidai-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "中学受験算数 類題メーカー (画像→類題+答え+解説)",
+  "scripts": {
+    "dev": "wrangler pages dev public --compatibility-date=2024-12-01",
+    "deploy": "wrangler pages deploy public"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240909.0",
+    "wrangler": "^3.78.0"
+  }
+}
