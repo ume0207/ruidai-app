@@ -116,83 +116,17 @@
         <span id="badge-difficulty" class="bg-amber-100 text-amber-700 px-4 py-1 rounded-full text-sm font-bold"></span>
       </div>
 
-      <!-- 元の問題 (問題1) -->
+      <!-- 元の問題 -->
       <div class="bg-white rounded-3xl shadow-lg p-6 border-l-8 border-slate-400">
         <div class="flex items-center gap-2 text-sm font-bold text-slate-500 mb-3">
-          <span class="bg-slate-100 px-2 py-0.5 rounded">問題①</span>
+          <span class="bg-slate-100 px-2 py-0.5 rounded">もと</span>
           <span>📄 もとの問題 (写真から読みとった)</span>
         </div>
         <div id="result-original" class="text-base sm:text-lg text-slate-800 leading-relaxed whitespace-pre-wrap"></div>
       </div>
 
-      <!-- 類題 (問題2) -->
-      <div class="bg-white rounded-3xl shadow-lg p-6 border-l-8 border-sky-500">
-        <div class="flex items-center gap-2 text-sm font-bold text-sky-600 mb-3">
-          <span class="bg-sky-100 px-2 py-0.5 rounded">問題②</span>
-          <span>📝 にた問題 (類題) — まずは自分でやってみよう!</span>
-        </div>
-        <div id="result-new-problem" class="text-lg sm:text-xl text-slate-800 leading-relaxed whitespace-pre-wrap font-semibold"></div>
-      </div>
-
-      <!-- 答え (隠す) -->
-      <div id="answer-card" class="bg-white rounded-3xl shadow-lg p-6 border-l-8 border-emerald-500 answer-locked">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2 text-sm font-bold text-emerald-600">
-            <span class="bg-emerald-100 px-2 py-0.5 rounded">答え合わせ</span>
-            <span>✅ 答え</span>
-          </div>
-        </div>
-        <!-- ロック中の表示 -->
-        <div class="answer-locked-view text-center py-6">
-          <div class="text-slate-500 mb-4">
-            まずは自分で考えてみよう!<br />
-            できたかな?
-          </div>
-          <button id="show-answer-btn"
-                  class="bg-gradient-to-r from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 active:scale-95 text-white text-lg font-extrabold py-3 px-8 rounded-2xl shadow">
-            👀 答えを見る
-          </button>
-        </div>
-        <!-- 答え本体 -->
-        <div class="answer-revealed-view hidden">
-          <div class="text-center">
-            <img src="/img/mascot-celebrate.png" alt="" class="w-16 h-16 mx-auto mb-2" />
-            <div id="result-answer" class="text-3xl sm:text-4xl font-extrabold text-emerald-700"></div>
-          </div>
-          <button id="hide-answer-btn"
-                  class="mt-4 mx-auto block bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold py-1.5 px-4 rounded-full">
-            答えをかくす
-          </button>
-        </div>
-      </div>
-
-      <!-- 解説 (隠す) -->
-      <div id="explanation-card" class="bg-white rounded-3xl shadow-lg p-6 border-l-8 border-rose-500 explanation-locked">
-        <div class="flex items-center gap-2 text-sm font-bold text-rose-600 mb-3">
-          <span class="bg-rose-100 px-2 py-0.5 rounded">かいせつ</span>
-          <span>💡 くわしいかいせつ</span>
-        </div>
-        <!-- ロック中の表示 -->
-        <div class="explanation-locked-view text-center py-6">
-          <div class="text-slate-500 mb-4">
-            答え合わせができたら、<br />
-            くわしい解き方を見てみよう!
-          </div>
-          <button id="show-explanation-btn"
-                  class="bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 active:scale-95 text-white text-lg font-extrabold py-3 px-8 rounded-2xl shadow">
-            📖 解説を見る
-          </button>
-        </div>
-        <!-- 解説本体 -->
-        <div class="explanation-revealed-view hidden">
-          <div id="result-steps" class="space-y-5"></div>
-          <div id="result-summary" class="mt-6 text-center p-4 bg-rose-50 rounded-2xl"></div>
-          <button id="hide-explanation-btn"
-                  class="mt-5 mx-auto block bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold py-1.5 px-4 rounded-full">
-            解説をかくす
-          </button>
-        </div>
-      </div>
+      <!-- 類題コンテナ (JSで2〜3問の類題カードを生成) -->
+      <div id="problems-container" class="space-y-5"></div>
 
       <!-- もう一回 -->
       <div class="text-center pt-4">

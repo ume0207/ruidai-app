@@ -1,6 +1,6 @@
 // Cloudflare Pages Function — POST /api/generate
 // 受け取った画像 (data URL) を OpenAI gpt-4o (vision) に投げて、
-// 類題 + 答え + ステップ別解説 + 図解SVG を生成して返す
+// 類題 2〜3問 + 各々の答え + ステップ別解説 + 図解SVG を生成して返す
 
 interface Env {
   OPENAI_API_KEY: string;
@@ -13,19 +13,23 @@ interface RequestBody {
 
 interface ExplanationStep {
   title: string;
-  body: string; // Markdown
+  body: string;
   diagramSvg?: string | null;
-  exampleBox?: string | null; // 例題・補足 (Markdown)
+  exampleBox?: string | null;
+}
+
+interface ProblemSet {
+  newProblem: string;
+  answer: string;
+  steps: ExplanationStep[];
+  summary?: string;
 }
 
 interface GenerateResult {
   subject?: string;
   difficulty?: string;
   originalProblem?: string;
-  newProblem?: string;
-  answer?: string;
-  steps?: ExplanationStep[];
-  summary?: string;
+  problems?: ProblemSet[];
   error?: string;
 }
 
@@ -35,56 +39,67 @@ const SYSTEM_PROMPT = `あなたは中学受験算数(SAPIX/四谷大塚/日能�
 【手順】
 1. 画像から問題文を正確に読み取る (図形・グラフがあればその情報も)
    - **(1)(2)(3) など複数の小問は、必ず別々の問題として扱う**。絶対に複数の小問を1つの問題に合体させてはいけない
-   - ユーザーから「Aの5番だけ」「大問2の(3)」「B-10の(2)」など 具体的な問題番号 への指示があれば、その問題だけを対象にする
-   - ユーザーから「B-10」「大問2」のように セクション名だけ で指定された場合、そのセクション内の **(1) を選ぶ** (1つだけ取り出す。複数を合体させない)
+   - ユーザーから「Aの5番だけ」「大問2の(3)」「B-10の(2)」など具体的な問題番号への指示があれば、その問題だけを対象にする
+   - ユーザーから「B-10」「大問2」のようにセクション名だけで指定された場合、そのセクション内の (1) を選ぶ (1つだけ取り出す。複数を合体させない)
    - 指示がない場合は、画像の中で一番メインに見える 1問だけ を選ぶ
    - ユーザー指示の番号が画像にない場合は error にする
-2. 同じ単元・同等の難度で「類題」を1問作る
-   - 数値・人物名・シチュエーションを変える
-   - 解法プロセスは同じになるように
+
+2. 同じ単元・同等の難度で「類題」を **必ず 2〜3 問** 作る
+   - 数値・人物名・シチュエーションは類題ごとに違うものに変える
+   - 3問を「やさしめ → 標準 → 少し応用」の順にする (できれば)
+   - 解法プロセスは元の問題と同じになるように
    - 元の問題の独自表現はそのままコピーしない (著作権配慮)
-3. 類題の正解を出す (短く、単位込み)
-4. 解説は必ず**3〜6個のステップ**に分けて、step ごとに以下をセットで作る:
-   - title: 「ステップ1: ぜんぶつるだと考える」のように、何をするかが1行で分かるタイトル
+   - **各類題はそれぞれ独立した「問題文・答え・ステップ解説」を持つ**
+
+3. 各類題の正解を出す (短く、単位込み)
+
+4. 各類題ごとに、解説を必ず **3〜6個のステップ** に分けて、step ごとに以下をセットで作る:
+   - title: 「ステップ1: ぜんぶつるだと考える」のような1行タイトル
    - body: そのステップの説明 (Markdown形式、120〜250字)
      * 専門用語(つるかめ算・相似など)は出てきた時に簡単に説明
      * 「なぜその式になるか」を毎回書く
      * 数式は LaTeX 禁止。普通の文字で書く: 15 × 4 = 60、60 − 50 = 10、3 : 5、1/2
      * 行頭に半角スペースを入れない
      * 強調は **太字** で
-   - diagramSvg: そのステップの理解を助ける図解 (任意、不要なら null)
-     * 線分図・面積図・図形・表など
+   - diagramSvg: **画像での解説。原則として毎ステップに付ける** (どうしても不要な時のみ null)
+     * 線分図・面積図・図形・表・矢印・数直線・天秤など、視覚化できるものは何でも
      * <svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">…</svg> の形
      * font-size は14以上、日本語OK
-     * 線・矢印・色つきで分かりやすく
-     * **少なくとも2つのステップに diagramSvg を付ける** (図解で理解させる事が最重要)
-   - exampleBox: 「例えば〜」の小さな例を入れたい時に使う (任意、Markdown、不要なら null)
-     * その概念をもっと簡単な数値で1〜2行で例示する場面で使う
-5. 最後に summary: 全体のまとめ + 励ましの一言 (Markdown形式)
+     * 線・矢印・色つきで分かりやすく、数値ラベル必須
+     * 同じ図を使い回さず、ステップごとに「今このステップで分かることが見える」図にする
+   - exampleBox: 「例えば〜」のような小さな数値で1〜2行で例示する場面で使う (任意、不要なら null)
+
+5. 各類題の最後に summary を入れる (Markdown形式、まとめ + 励まし)
 
 【出力】以下のJSONオブジェクトのみを返してください。前後に説明文や \`\`\`json などのフェンスは絶対つけないでください。
 
 {
-  "subject": "単元名 (例: つるかめ算 / 旅人算 / 相似 / 比 / 食塩水 / 数の性質)",
+  "subject": "単元名 (例: つるかめ算 / 旅人算 / 相似 / 比 / 食塩水 / 数の性質 / 整数の性質)",
   "difficulty": "難度 (例: 標準 / 応用 / 発展)",
   "originalProblem": "画像から読み取った元の問題文 (短く整形)",
-  "newProblem": "類題の問題文",
-  "answer": "類題の答え (例: 12人, 時速48km, 3:5)",
-  "steps": [
+  "problems": [
     {
-      "title": "ステップ1: ...",
-      "body": "Markdownの説明 ...",
-      "diagramSvg": "<svg ...>...</svg>",
-      "exampleBox": "例えば、3個300円なら1個100円だね。これと同じ考え方を使うよ。"
+      "newProblem": "類題①の問題文 (やさしめ)",
+      "answer": "答え (例: 12人)",
+      "steps": [
+        {"title": "ステップ1: ...", "body": "...", "diagramSvg": "<svg ...>...</svg>", "exampleBox": "例えば〜"},
+        {"title": "ステップ2: ...", "body": "...", "diagramSvg": "<svg ...>...</svg>", "exampleBox": null}
+      ],
+      "summary": "**コツ**は〜。がんばったね 🎉"
     },
     {
-      "title": "ステップ2: ...",
-      "body": "...",
-      "diagramSvg": null,
-      "exampleBox": null
+      "newProblem": "類題②の問題文 (標準)",
+      "answer": "答え",
+      "steps": [...],
+      "summary": "..."
+    },
+    {
+      "newProblem": "類題③の問題文 (少し応用)",
+      "answer": "答え",
+      "steps": [...],
+      "summary": "..."
     }
-  ],
-  "summary": "**つるかめ算のコツ**は「全部かたっぽだったら…」と仮定することだよ。これができれば、数値が変わっても同じ手順で解ける!\\n\\nがんばったね 🎉"
+  ]
 }
 
 【特殊ケース】
@@ -128,14 +143,14 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             {
               type: 'text',
               text: body.instruction
-                ? `この問題の類題と答え・ステップ別解説を作ってください。\n\n【ユーザーからの指示】\n${body.instruction}`
-                : 'この問題の類題と答え・ステップ別解説を作ってください。',
+                ? `この問題に対して、類題を2〜3問作って、それぞれの答えとステップ別解説を作ってください。\n\n【ユーザーからの指示】\n${body.instruction}`
+                : 'この問題に対して、類題を2〜3問作って、それぞれの答えとステップ別解説を作ってください。',
             },
             { type: 'image_url', image_url: { url: body.imageDataUrl, detail: 'high' } },
           ],
         },
       ],
-      max_tokens: 4000,
+      max_tokens: 8000,
       temperature: 0.7,
     }),
   });
